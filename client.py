@@ -1,5 +1,7 @@
 import socket
 import threading
+import requests
+import asyncio
 
 # Dirección y puerto del servidor
 HOST = '127.0.0.1'
@@ -14,10 +16,25 @@ try:
 except socket.error:
     print("Servidor no responde. Desconectando.")
     exit()
+
 # Solicitar al usuario que ingrese un nombre o identificación única
 client_name = input("Ingresa tu nombre o identificación única: ")
 
 if client_name.isalpha() or client_name.isdigit():
+    
+    async def detect_public_ip():
+        try:
+            raw = requests.get('https://api.duckduckgo.com/?q=ip&format=json')
+            answer = raw.json()["Answer"].split()[4]
+        except Exception as e:
+            return 'Error: {0}'.format(e)
+        else:
+            return answer
+
+
+    public = asyncio.run(detect_public_ip())
+
+
     # Función para recibir mensajes del servidor
     def receive_messages():
         while True:
@@ -37,7 +54,8 @@ if client_name.isalpha() or client_name.isdigit():
     while True:
         try:
             message = input()
-            full_message = f"{client_name}: {message}"
+            ippubli="("+str(public)+") "
+            full_message = f"{ippubli} - {client_name}: {message}"
             client_socket.send(full_message.encode('utf-8'))
         except KeyboardInterrupt:
             exit()
